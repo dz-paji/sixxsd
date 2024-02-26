@@ -6,6 +6,7 @@
  Heartbeat
 ***********************************************************/
 #include "sixxsd.h"
+#include "hash_evp.h"
 
 const char module_hb[] = "hb";
 #define module module_hb
@@ -32,15 +33,17 @@ static VOID hb_log(int level, const IPADDRESS *src, const char *fmt, ...)
 
 VOID hb_in(const IPADDRESS *src, const uint8_t *packet, uint32_t len)
 {
-	struct MD5Context	md5;
+	// struct MD5Context	md5;
 	struct sixxsd_tunnel	*tun;
 	uint16_t		in_tid;
-	uint8_t			message[256], our_digest[16], tmp[1024], *p = our_digest;
+	uint8_t			message[256], our_digest[64], tmp[1024], *p = our_digest;
 	char			them[64], sender[64], *pnt, *pnt2;
 	IPADDRESS		identity, ip;
 	int64_t			i;
 	uint64_t		currtime, datetime;
 	BOOL			is_tunnel;
+	EVP_MD_CTX		*md;
+	unsigned int	sha256_len;
 
 	if (len >= sizeof(message))
 	{
@@ -175,14 +178,19 @@ VOID hb_in(const IPADDRESS *src, const uint8_t *packet, uint32_t len)
 
 	snprintf((char *)tmp, sizeof(tmp), "%s%s %s %" PRIu64 " %s", hb_prefix, them, sender, datetime, tun->hb_password);
 
-	/* Generate a MD5 */
-	MD5Init(&md5);
-	MD5Update(&md5, tmp, strlen((char *)tmp));
-	MD5Final(our_digest, &md5);
+	// /* Generate a MD5 */
+	// MD5Init(&md5);
+	// MD5Update(&md5, tmp, strlen((char *)tmp));
+	// MD5Final(our_digest, &md5);
+
+	/* Generate SHA256*/
+	SHA256Init(&md);
+	SHA256Update(&md, tmp, (unsigned int)strlen((char *)tmp));
+	SHA256Final(&md, our_digest);
 
 	pnt2 = (char *)tmp;
 	/* make the digest */
-	for (i = 0; i < 16; i++)
+	for (i = 0; i < sha256_len; i++)
 	{
 		snprintf((char *)pnt2, 3, "%02x", *p++);
 		pnt2 += 2;

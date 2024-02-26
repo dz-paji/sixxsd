@@ -1,5 +1,9 @@
 # sixxsd
 
+## Added requirements in this fork
+
+* openssl
+
 "sixxsd" is the SixXS Daemon, it is the software that used to run on the [SixXS](https://www.sixxs.net/) PoPs 
 and that handled the server-side of proto-41, heartbeat and AYIYA tunnels.
 

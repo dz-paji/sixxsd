@@ -78,6 +78,7 @@ struct sixxsd_context;
 /* Hashes */
 #include "hash_sha1.h"
 #include "hash_md5.h"
+#include "hash_evp.h"
 
 /* Checksum */
 #include "checksum.h"

@@ -116,6 +116,7 @@ CFLAGS += -Wformat=2 -Wformat-security -Wmissing-format-attribute
 CFLAGS += -D_REENTRANT -D_THREAD_SAFE
 CFLAGS += -pipe
 CFLAGS += -Wunused -Winit-self -Wextra -Wno-long-long -Wmissing-include-dirs
+CFLAGS += -lssl -lcrypto
 
 # For a rainy day, get rid of all warnings caused by:
 #CFLAGS += -Wconversion

@@ -20,18 +20,18 @@ BINS		=
 # The modules sixxsd consists of
 SD_EXE		=	../bin/sixxsd_$(OS_BITS)
 BINS		+=	$(SD_EXE)
-SD_OBJS		=	sixxsd.o 							\
-			ayiya.o								\
+SD_OBJS		=	sixxsd.o												\
+			ayiya.o														\
 			checksum.o common.o common_extra.o config.o context.o 		\
-			decode.o direct.o						\
-			gre.o								\
-			hash_md5.o hash_sha1.o						\
-			hb.o								\
-			icmpv4.o							\
-			iface.o								\
-			pop.o pproxy.o							\
-			rwl.o								\
-			subnet.o							\
+			decode.o direct.o											\
+			gre.o														\
+			hash_md5.o hash_sha1.o hash_evp.o							\
+			hb.o														\
+			icmpv4.o													\
+			iface.o														\
+			pop.o pproxy.o												\
+			rwl.o														\
+			subnet.o													\
 			thread.o tunnel.o
 SD_LIBS		=
 
