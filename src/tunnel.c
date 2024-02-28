@@ -511,7 +511,8 @@ static int tunnel_cmd_set_config(struct sixxsd_context *ctx, const unsigned int 
 {
 	struct sixxsd_tunnel	*tun;
 	uint16_t		tid;
-	SHA_CTX			sha1;
+	// SHA_CTX			sha1;
+	EVP_MD_CTX		*md;
 	unsigned int		i, tmp;
 
 	if (sscanf(args[0], "%x", &tmp) != 1)
@@ -599,7 +600,7 @@ static int tunnel_cmd_set_config(struct sixxsd_context *ctx, const unsigned int 
 
 	if (argc == 6)
 	{
-		sha1_byte shatmp[sizeof(tun->hb_password)];
+		uint8_t shatmp[sizeof(tun->hb_password)];
 
 		i = strlen(args[5]);
 		if ((i+1) > sizeof(tun->hb_password))
@@ -613,9 +614,13 @@ static int tunnel_cmd_set_config(struct sixxsd_context *ctx, const unsigned int 
 		memcpy((char *)tun->hb_password, args[5], i);
 
 		/* Pre-generate AYIYA SHA1 hash */
-		SHA1_Init(&sha1);
-		SHA1_Update(&sha1, tun->hb_password, i, shatmp);
-		SHA1_Final(tun->ayiya_sha1, &sha1);
+		// SHA1_Init(&sha1);
+		// SHA1_Update(&sha1, tun->hb_password, i, shatmp);
+		// SHA1_Final(tun->ayiya_sha1, &sha1);
+
+		SHA256Init(&md);
+		SHA256Update(&md, tun->hb_password, i);
+		SHA256Final(&md, tun->ayiya_sha256);
 	}
 
 	ctx_printf(ctx, "Accepted Tunnel %x/T%u%s\n", tid, tun->tunnel_id, argc == 5 ? " with password" : "");

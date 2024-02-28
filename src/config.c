@@ -66,7 +66,8 @@ int cfg_init(struct sixxsd_context *ctx, uint32_t verbose)
 		tun->type		= SIXXSD_TTYPE_NONE;
 		tun->state		= SIXXSD_TSTATE_NONE;
 		tun->debug_ctx		= NULL;
-		tun->ayiya_hash_type	= ayiya_hash_sha1;
+		// tun->ayiya_hash_type	= ayiya_hash_sha1;
+		tun->ayiya_hash_type	= ayiya_hash_sha256;
 
 		/* Init ip_them to IPv4 any */
 		/* Later we fill in the IP address with something real from AYIYA or heartbeat source */

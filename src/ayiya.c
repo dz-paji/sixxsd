@@ -15,7 +15,7 @@ struct pseudo_ayh
 {
 	struct ayiyahdr	ayh;
 	IPADDRESS	identity;
-	sha1_byte	hash[SHA1_DIGEST_LENGTH];
+	uint8_t		hash[SHA256_DIGEST_LENGTH];
 	uint8_t		payload[2048];
 } PACKED;
 
@@ -68,7 +68,10 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uint16_t out_tid, const uint8_t protocol, const uint8_t *packet, const uint16_t len)
 {
 	SHA_CTX		sha1;
-	sha1_byte	hash[SHA1_DIGEST_LENGTH], shatmp[sizeof(*s)];
+	// sha1_byte	hash[SHA1_DIGEST_LENGTH], shatmp[sizeof(*s)];
+
+	EVP_MD_CTX		*md;
+	uint8_t			hash[SHA256_DIGEST_LENGTH], shatmp[sizeof(*s)];
 
 	/* Standard AYIYA values */
 	s->ayh.ayh_idlen = 4;			/* 2^4 = 16 bytes = 128 bits (IPv6 address) */
@@ -94,16 +97,21 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 	 * The hash of the shared secret needs to be in the
 	 * spot where we later put the complete hash
 	 */
-	memcpy(&s->hash, &tun->ayiya_sha1, sizeof(s->hash));
+	memcpy(&s->hash, &tun->ayiya_sha256, sizeof(s->hash));
 
-	/* Generate a SHA1 */
-	SHA1_Init(&sha1);
-	/* Hash the complete AYIYA packet */
-	SHA1_Update(&sha1, (unsigned char *)s, sizeof(*s) - sizeof(s->payload) + len, shatmp);
+	// /* Generate a SHA1 */
+	// SHA1_Init(&sha1);
+	// /* Hash the complete AYIYA packet */
+	// SHA1_Update(&sha1, (unsigned char *)s, sizeof(*s) - sizeof(s->payload) + len, shatmp);
 
-	/* XXX: can we 'incrementally update' a SHA1 hash, as in sha1(header) + sha1(payload) ? */
-	/* Store the hash in the packets hash */
-	SHA1_Final(hash, &sha1);
+	// /* XXX: can we 'incrementally update' a SHA1 hash, as in sha1(header) + sha1(payload) ? */
+	// /* Store the hash in the packets hash */
+	// SHA1_Final(hash, &sha1);
+
+	/* Generate SHA256 hash */
+	SHA256Init(&md);
+	SHA256Update(&md, (unsigned char *)s, sizeof(*s) - sizeof(s->payload) + len);
+	SHA256Final(&md, hash);
 
 	/* Store the hash in the packet */
 	memcpy(&s->hash, &hash, sizeof(s->hash));
@@ -182,10 +190,12 @@ VOID ayiya_out_ipv6(struct sixxsd_tunnel *tun, const uint16_t in_tid, const uint
 */
 VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype, const uint8_t protocol, const uint16_t sport, const uint16_t dport, const uint8_t *packet, const uint32_t len)
 {
-	SHA_CTX			sha1;
+	// SHA_CTX			sha1;
+	EVP_MD_CTX		*md;
+	unsigned int	sha256_len;
 	struct pseudo_ayh	*s = (struct pseudo_ayh *)packet;
-	sha1_byte		their_hash[SHA1_DIGEST_LENGTH],
-				our_hash[SHA1_DIGEST_LENGTH],
+	uint8_t		their_hash[SHA256_DIGEST_LENGTH],
+				our_hash[SHA256_DIGEST_LENGTH],
 				shatmp[sizeof(*s)];
 	int64_t			i;
 	struct sixxsd_tunnel	*tun;
@@ -197,16 +207,16 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 	/*
 	 * - idlen must be 4 (2^4 = 16 bytes = 128 bits = IPv6 address)
 	 * - It must be an integer identity
-	 * - siglen must be 5 (5*4 = 20 bytes = 160 bits = SHA1)
-	 * - Hash Method == SHA1
+	 * - siglen must be 8 (8*4 = 32 bytes = 256 bits = SHA256 Digest lengths)
+	 * - Hash Method == SHA256
 	 * - Authentication Method must be Shared Secret
 	 * - Next header must be IPv6 or IPv6 No Next Header
 	 * - Opcode must be 0 - 2
 	 */
         if (	s->ayh.ayh_idlen != 4 ||
 		s->ayh.ayh_idtype != ayiya_id_integer ||
-		s->ayh.ayh_siglen != 5 ||
-		s->ayh.ayh_hshmeth != ayiya_hash_sha1 ||
+		s->ayh.ayh_siglen != 8 ||
+		s->ayh.ayh_hshmeth != ayiya_hash_sha256 ||
 		s->ayh.ayh_autmeth != ayiya_auth_sharedsecret ||
 		(s->ayh.ayh_nextheader != IPPROTO_IPV4 &&
 		 s->ayh.ayh_nextheader != IPPROTO_IPV6 &&
@@ -221,7 +231,7 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "idlen:   %u != %u\n", s->ayh.ayh_idlen, 4);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "idtype:  %u != %u\n", s->ayh.ayh_idtype, ayiya_id_integer);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "siglen:  %u != %u\n", s->ayh.ayh_siglen, 5);
-		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "hshmeth: %u != %u\n", s->ayh.ayh_hshmeth, ayiya_hash_sha1);
+		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "hshmeth: %u != %u\n", s->ayh.ayh_hshmeth, ayiya_hash_sha256);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "autmeth: %u != %u\n", s->ayh.ayh_autmeth, ayiya_auth_sharedsecret);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "nexth  : %u != %u || %u\n", s->ayh.ayh_nextheader, IPPROTO_IPV6, IPPROTO_NONE);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "opcode : %u != %u || %u || %u || %u\n", s->ayh.ayh_opcode, ayiya_op_noop, ayiya_op_forward, ayiya_op_echo_request, ayiya_op_echo_request_forward);
@@ -281,14 +291,19 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 	memcpy(&their_hash, &s->hash, sizeof(their_hash));
 
 	/* Copy in our SHA1 hash */
-	memcpy(&s->hash, &tun->ayiya_sha1, sizeof(s->hash));
+	memcpy(&s->hash, &tun->ayiya_sha256, sizeof(s->hash));
 
-	/* Generate a SHA1 of the header + identity + shared secret */
-	SHA1_Init(&sha1);
-	/* Hash the Packet */
-	SHA1_Update(&sha1, (unsigned char *)s, len, shatmp);
-	/* Store the hash */
-	SHA1_Final(our_hash, &sha1);
+	// /* Generate a SHA1 of the header + identity + shared secret */
+	// SHA1_Init(&sha1);
+	// /* Hash the Packet */
+	// SHA1_Update(&sha1, (unsigned char *)s, len, shatmp);
+	// /* Store the hash */
+	// SHA1_Final(our_hash, &sha1);
+
+	/* Generate SHA256 hash */
+	SHA256Init(&md);
+	SHA256Update(&md, (unsigned char *)s, len);
+	SHA256Final(&md, our_hash);
 
 	/* Generate a SHA1 of the header + identity + shared secret */
 	/* Compare the SHA1's */
@@ -350,6 +365,7 @@ const char *ayiya_hash_name(enum ayiya_hash type)
 		"none",
 		"MD5",
 		"SHA-1",
+		"SHA-256"
 	};
 
 	return type < lengthof(types) ? types[type] : "<unknown>";

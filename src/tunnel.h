@@ -86,7 +86,8 @@ struct sixxsd_tunnel
 	uint8_t				ayiya_protocol;			/* Which IP Protocol is used (TCP/UDP/SCTP) */
 	uint8_t				ayiya_socktype;			/* Which Socket Type is used (STREAM/DGRAM/SEQPACKET) */
 	uint8_t				ayiya_hash_type;		/* AYIYA hash mode */
-	uint8_t				ayiya_sha1[SHA1_DIGEST_LENGTH];	/* SHA1 hash */
+	uint8_t				ayiya_sha1[SHA1_DIGEST_LENGTH];	/* SHA1 hash. DEPRACATED */
+	uint8_t				ayiya_sha256[SHA256_DIGEST_LENGTH];	/* SHA256 hash */
 
 	/* Heartbeat */
 	uint8_t				hb_password[133];		/* Heartbeat password */

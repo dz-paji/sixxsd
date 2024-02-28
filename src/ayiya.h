@@ -31,7 +31,8 @@ enum ayiya_hash
 {
 	ayiya_hash_none			= 0x0,	/* No hash */
 	ayiya_hash_md5			= 0x1,	/* MD5 Signature */
-	ayiya_hash_sha1			= 0x2	/* SHA1 Signature */
+	ayiya_hash_sha1			= 0x2,	/* SHA1 Signature */
+	ayiya_hash_sha256		= 0x3	/* SHA256 Signature */
 };
 
 enum ayiya_auth
