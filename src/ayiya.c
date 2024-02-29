@@ -76,8 +76,8 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 	/* Standard AYIYA values */
 	s->ayh.ayh_idlen = 4;			/* 2^4 = 16 bytes = 128 bits (IPv6 address) */
 	s->ayh.ayh_idtype = ayiya_id_integer;
-	s->ayh.ayh_siglen = 5;			/* 5*4 = 20 bytes = 160 bits (SHA1) */
-	s->ayh.ayh_hshmeth = ayiya_hash_sha1;
+	s->ayh.ayh_siglen = 8;			/* 8*4 = 32 bytes = 256 bits = SHA256 Digest lengths */
+	s->ayh.ayh_hshmeth = ayiya_hash_sha256;
 	s->ayh.ayh_autmeth = ayiya_auth_sharedsecret;
 	s->ayh.ayh_opcode = ayiya_op_forward;
 	s->ayh.ayh_nextheader = protocol;
@@ -230,7 +230,7 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "incoming: Dropping invalid AYIYA packet\n");
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "idlen:   %u != %u\n", s->ayh.ayh_idlen, 4);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "idtype:  %u != %u\n", s->ayh.ayh_idtype, ayiya_id_integer);
-		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "siglen:  %u != %u\n", s->ayh.ayh_siglen, 5);
+		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "siglen:  %u != %u\n", s->ayh.ayh_siglen, 8);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "hshmeth: %u != %u\n", s->ayh.ayh_hshmeth, ayiya_hash_sha256);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "autmeth: %u != %u\n", s->ayh.ayh_autmeth, ayiya_auth_sharedsecret);
 		ayiya_log(LOG_ERR, src, socktype, protocol, sport, dport, &s->identity, "nexth  : %u != %u || %u\n", s->ayh.ayh_nextheader, IPPROTO_IPV6, IPPROTO_NONE);
