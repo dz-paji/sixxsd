@@ -20,4 +20,8 @@ void SHA256Final(EVP_MD_CTX *mdctx, char *digest)
     unsigned char md_value[EVP_MAX_MD_SIZE];
     unsigned int md_len, i;
     EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+        for (i = 0; i < md_len; i++) {
+        snprintf(digest + (i * 2), 3, "%02x", md_value[i]);
+    }
+    EVP_cleanup();
 }
