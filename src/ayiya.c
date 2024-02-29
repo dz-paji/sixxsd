@@ -70,7 +70,7 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 	SHA_CTX		sha1;
 	// sha1_byte	hash[SHA1_DIGEST_LENGTH], shatmp[sizeof(*s)];
 
-	EVP_MD_CTX		*md;
+	EVP_MD_CTX		*md = EVP_MD_CTX_create();
 	uint8_t			hash[SHA256_DIGEST_LENGTH], shatmp[sizeof(*s)];
 
 	/* Standard AYIYA values */
@@ -109,9 +109,9 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 	// SHA1_Final(hash, &sha1);
 
 	/* Generate SHA256 hash */
-	SHA256Init(&md);
-	SHA256Update(&md, (unsigned char *)s, sizeof(*s) - sizeof(s->payload) + len);
-	SHA256Final(&md, hash);
+	SHA256Init(md);
+	SHA256Update(md, (unsigned char *)s, sizeof(*s) - sizeof(s->payload) + len);
+	SHA256Final(md, hash);
 
 	/* Store the hash in the packet */
 	memcpy(&s->hash, &hash, sizeof(s->hash));
@@ -191,7 +191,7 @@ VOID ayiya_out_ipv6(struct sixxsd_tunnel *tun, const uint16_t in_tid, const uint
 VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype, const uint8_t protocol, const uint16_t sport, const uint16_t dport, const uint8_t *packet, const uint32_t len)
 {
 	// SHA_CTX			sha1;
-	EVP_MD_CTX		*md;
+	EVP_MD_CTX		*md = EVP_MD_CTX_create();
 	unsigned int	sha256_len;
 	struct pseudo_ayh	*s = (struct pseudo_ayh *)packet;
 	uint8_t		their_hash[SHA256_DIGEST_LENGTH],
@@ -301,9 +301,9 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 	// SHA1_Final(our_hash, &sha1);
 
 	/* Generate SHA256 hash */
-	SHA256Init(&md);
-	SHA256Update(&md, (unsigned char *)s, len);
-	SHA256Final(&md, our_hash);
+	SHA256Init(md);
+	SHA256Update(md, (unsigned char *)s, len);
+	SHA256Final(md, our_hash);
 
 	/* Generate a SHA1 of the header + identity + shared secret */
 	/* Compare the SHA1's */

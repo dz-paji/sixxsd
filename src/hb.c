@@ -42,7 +42,7 @@ VOID hb_in(const IPADDRESS *src, const uint8_t *packet, uint32_t len)
 	int64_t			i;
 	uint64_t		currtime, datetime;
 	BOOL			is_tunnel;
-	EVP_MD_CTX		*md;
+	EVP_MD_CTX		*md = EVP_MD_CTX_create();
 	unsigned int	sha256_len;
 
 	if (len >= sizeof(message))
@@ -184,9 +184,9 @@ VOID hb_in(const IPADDRESS *src, const uint8_t *packet, uint32_t len)
 	// MD5Final(our_digest, &md5);
 
 	/* Generate SHA256*/
-	SHA256Init(&md);
-	SHA256Update(&md, tmp, (unsigned int)strlen((char *)tmp));
-	SHA256Final(&md, our_digest);
+	SHA256Init(md);
+	SHA256Update(md, tmp, (unsigned int)strlen((char *)tmp));
+	SHA256Final(md, our_digest);
 
 	pnt2 = (char *)tmp;
 	/* make the digest */
