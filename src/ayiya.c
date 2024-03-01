@@ -16,7 +16,7 @@ struct pseudo_ayh
 	struct ayiyahdr	ayh;
 	IPADDRESS	identity;
 	uint8_t		hash[SHA256_DIGEST_LENGTH];
-	uint8_t		payload[2048];
+	uint8_t		payload[2012];
 } PACKED;
 
 /*
@@ -365,6 +365,7 @@ const char *ayiya_hash_name(enum ayiya_hash type)
 		"none",
 		"MD5",
 		"SHA-1",
+		"UMAC",
 		"SHA-256"
 	};
 
