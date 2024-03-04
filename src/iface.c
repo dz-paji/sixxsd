@@ -1662,10 +1662,10 @@ VOID iface_upnets(VOID)
 		 * Point the tunnel prefix to the 'sixxsd' address (above)
 		 * this avoids a /48 of neighbour caching in the Linux kernel
 		 */
-		os_exec("/sbin/ip -6 ro add %s:/48 via %sffff::1 dev sixxs",
-				tuns->prefix_asc, tuns->prefix_asc);
+		os_exec("/sbin/ip -6 ro add %s/" PRIu8 " via %sffff::1 dev sixxs",
+				tuns->prefix_asc, tuns->prefix_length, tuns->prefix_asc);
 #else /* FreeBSD/OSX */
-		os_exec("/sbin/route add -inet6 %s:/48 -interface sixxs", tuns->prefix_asc);
+		os_exec("/sbin/route add -inet6 %s/" PRIu8 " -interface sixxs", tuns->prefix_asc, tuns->prefix_length);
 #endif
 		tuns->online = true;
 	}

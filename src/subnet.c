@@ -20,8 +20,12 @@ struct sixxsd_subnet *subnet_get6(IPADDRESS *addr)
 		ss = &g_conf->subnets[i];
 
 		/* Only look at the first prefix_length bits */
+
+		printf("ss->prefix_length: %d\n", ss->prefix_length);
 		bo = ss->prefix_length / 8;
+		printf("bo: %d\n", bo);
 		if (memcmp(&ss->prefix, addr, bo) != 0) continue;
+		printf("memcmp(&ss->prefix, addr, bo): %s\n", inet_ntopA(&ss->prefix, NULL, 0));
 
 		/* The next 8 bits describe the subnet id */
 		sid = addr->a8[bo];

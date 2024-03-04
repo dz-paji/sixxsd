@@ -119,7 +119,7 @@ struct sixxsd_configuration
 	struct sixxsd_tunnels	tunnels;				/* We can have 1 tunnel prefix per PoP */
 
 	/* The Subnets */
-	struct sixxsd_subnets	subnets[16];				/* The subnets (16 /40's per PoP max) */
+	struct sixxsd_subnets	subnets[16];				/* The subnets (16 subnets per PoP max) legacy ver. requires /40 */
 	uint64_t		subnets_hi;				/* The highest in-use subnet */
 
 	/* Port Proxies (pproxy) */

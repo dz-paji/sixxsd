@@ -615,7 +615,7 @@ static int pop_cmd_tunnelprefix_list(struct sixxsd_context *ctx, const unsigned 
 		return 404;
 	}
 
-	ctx_printf(ctx, "%s:/48\n", tuns->prefix_asc);
+	ctx_printf(ctx, "%s" PRIu8 "\n", tuns->prefix_asc, tuns->prefix_length);
 
 	return 200;
 }
@@ -626,6 +626,8 @@ static int pop_cmd_tunnelprefix_add(struct sixxsd_context *ctx, const unsigned i
 	IPADDRESS		ip;
 	unsigned int		j;
 	struct sixxsd_tunnels	*tuns = &g_conf->tunnels;
+
+	/* example args[0]: 2001:db8:85a3::8a2e:370:7334/56 */
 
 	if (!inet_ptonA(args[0], &ip, NULL))
 	{
@@ -642,8 +644,20 @@ static int pop_cmd_tunnelprefix_add(struct sixxsd_context *ctx, const unsigned i
 	/* Fill in the prefix */
 	memcpy(&tuns->prefix, &ip, sizeof(tuns->prefix));
 
+	/* The prefix length */
+	char *saved_args = strdup(args[0]);
+	char *token;
+	token = strtok(saved_args, "/");
+	token = strtok(NULL, "/");
+	tuns->prefix_length = atoi(token);
+	char prefix[NI_MAXHOST];
+	inet_ntopA(&tuns->prefix, prefix, sizeof(tuns->prefix_asc));
+	printf("tuns->prefix: %s\n", &prefix);
+
 	/* Pre-generate a human-readable version */
 	inet_ntopA(&tuns->prefix, tuns->prefix_asc, sizeof(tuns->prefix_asc));
+
+	printf("tuns->prefix_asc: %s\n", tuns->prefix_asc);
 
 	/* Reduce the double :: to a single : as then we can just append the tunnel postfix */
 	j = strlen(tuns->prefix_asc);
@@ -653,12 +667,12 @@ static int pop_cmd_tunnelprefix_add(struct sixxsd_context *ctx, const unsigned i
 		return 500;
 	}
 
-	tuns->prefix_asc[j-1] = '\0';
+	// tuns->prefix_asc[j-1] = '\0';
 
 	/* Bring them up if possible */
 	iface_upnets();
 
-	ctx_printf(ctx, "Tunnel Prefix %s:/48 configured\n", tuns->prefix_asc);
+	ctx_printf(ctx, "Tunnel Prefix %s/%d configured\n", tuns->prefix_asc, tuns->prefix_length);
 	return 200;
 }
 
@@ -692,11 +706,15 @@ static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned i
 		return 400;
 	}
 
+/*	Easer the subnets prefix restriction.
+
 	if (prefixlen != 48 && prefixlen != 40)
 	{
 		ctx_printf(ctx, "A Prefixlength %u not accepted (only /48's for /56 subnets or a /40 for /48 subnets)\n", prefixlen);
 		return 400;
 	}
+
+*/
 
 	/* Find old one */
 	for (i = 0; i < lengthof(g_conf->subnets); i++)

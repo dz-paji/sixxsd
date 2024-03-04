@@ -105,8 +105,9 @@ struct sixxsd_tunnel
 
 struct sixxsd_tunnels
 {
-	IPADDRESS			prefix;				/* Prefix (always a /64) */
+	IPADDRESS			prefix;				/* Prefix (old always a /64, new should be /127) */
 	char				prefix_asc[NI_MAXHOST];		/* Cached textual representation of prefix */
+	uint8_t				prefix_length;			/* Length of the prefix */
 	uint8_t				__padding[7];
 
 	uint64_t			tunnel_hi;			/* Highest tunnel_id in-use */

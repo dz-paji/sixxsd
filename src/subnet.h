@@ -17,7 +17,7 @@ struct sixxsd_subnet
 struct sixxsd_subnets
 {
 	IPADDRESS			prefix;				/* The prefix */
-	uint8_t				prefix_length;			/* Length of the prefix ('/48 with /56s' or '/40 with /48s') */
+	uint8_t				prefix_length;			/* Length of the prefix (old '/48 with /56s' or '/40 with /48s') */
 
 	char				prefix_asc[NI_MAXHOST];		/* Cached textual representation of prefix */
 	uint8_t				__padding[6];
