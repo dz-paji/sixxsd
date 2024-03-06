@@ -4,6 +4,15 @@
 
 * openssl
 
+## Compile guide
+
+```
+# For debian & ubuntu
+apt install make build-essential libmysqlclient-dev librrd-dev
+```
+
+# Original README
+
 "sixxsd" is the SixXS Daemon, it is the software that used to run on the [SixXS](https://www.sixxs.net/) PoPs 
 and that handled the server-side of proto-41, heartbeat and AYIYA tunnels.
 
