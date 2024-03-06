@@ -696,9 +696,10 @@ static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned i
 static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned int UNUSED argc, const char *args[])
 {
 	IPADDRESS		ip;
-	unsigned int		i, j, prefixlen, rembytes;
+	// unsigned int		i, j, prefixlen, rembytes;
+	unsigned int		i, j, prefixlen;
 	struct sixxsd_subnets	*subs;
-	const char		*remstring;
+	// const char		*remstring;
 
 	if (!inet_ptonA(args[0], &ip, &prefixlen))
 	{
@@ -748,6 +749,9 @@ static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned i
 			return 500;
 		}
 
+		printf("subs->prefix_asc: %s/%d\n", subs->prefix_asc, subs->prefix_length);
+
+/*
 		if (prefixlen == 40)
 		{
 			rembytes = 4;
@@ -758,18 +762,28 @@ static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned i
 			rembytes = 2;
 			remstring = "::";
 		}
+*/
 
 		/* Remove the "00::" from the /40 as then we can just append the subnet postfix */
 		/* Remove the   "::" from the /48 ... */
+		/*
 		if (strcmp(&subs->prefix_asc[j - rembytes], remstring) != 0)
 		{
 			assert(false);
 			ctx_printf(ctx, "Can't handle a subnet prefix which does not end in %s, got %s\n", remstring, subs->prefix_asc);
 			return 500;
 		}
-
+		*/
 		/* Remove 00:: */
+		/*
 		subs->prefix_asc[j - rembytes] = '\0';
+		*/
+
+		/* Work out network and prefix by CIDR. */
+		char assigned_host[NI_MAXHOST];
+		char assigned_network[NI_MAXHOST];
+		inet_ntopA(&subs->prefix, assigned_network, sizeof(assigned_network));
+		
 
 		/* The new high one */
 		g_conf->subnets_hi = i;
