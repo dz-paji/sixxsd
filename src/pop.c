@@ -416,7 +416,7 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 	fprintf(f, "\n");
 
 	/* Tunnel prefixes */
-	fprintf(f, "\ttunnelprefix add %s:/48\n", g_conf->tunnels.prefix_asc);
+	fprintf(f, "\ttunnelprefix add %s/%d\n", g_conf->tunnels.prefix_asc, g_conf->tunnels.prefix_length);
 	fprintf(f, "\n");
 
 	/* Subnet prefixes */
@@ -425,7 +425,7 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 	for (i = 0; i <= g_conf->subnets_hi; i++)
 	{
 		subs = &g_conf->subnets[i];
-		fprintf(f, "\t\tadd %s%s::/%u\n", subs->prefix_asc, subs->prefix_length == 40 ? "00" : "", subs->prefix_length);
+		fprintf(f, "\t\tadd %s/%u\n", subs->prefix_asc, subs->prefix_length);
 	}
 
 	fprintf(f, "\tend\n");
@@ -486,12 +486,10 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 			sub = &subs->subnet[j];
 			if (sub->tunnel_id == SIXXSD_TUNNEL_NONE) continue;
 
-			fprintf(f, "\t\tconfig %s%s%02x%s::/%u %x static\n",
+			fprintf(f, "\t\tconfig %s%02x/%u %x static\n",
 				subs->prefix_asc,
-				subs->prefix_length == 40 ? "" : "::",
 				j,
-				subs->prefix_length == 40 ? "" : "00",
-				subs->prefix_length == 40 ? 48 : 56, sub->tunnel_id);
+				subs->prefix_length, sub->tunnel_id);
 		}
 	}
 
@@ -783,6 +781,9 @@ static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned i
 		char assigned_host[NI_MAXHOST];
 		char assigned_network[NI_MAXHOST];
 		inet_ntopA(&subs->prefix, assigned_network, sizeof(assigned_network));
+		printf("assigned network: %s\n", assigned_network);
+		printf("assigned host: %s\n", assigned_host);
+
 		
 
 		/* The new high one */
@@ -791,7 +792,7 @@ static int pop_cmd_subnetprefix_add(struct sixxsd_context *ctx, const unsigned i
 		/* Bring them up if possible */
 		iface_upnets();
 
-		ctx_printf(ctx, "Subnet Prefix %s00::/%u added\n", subs->prefix_asc, subs->prefix_length);
+		ctx_printf(ctx, "Subnet Prefix %s/%u added\n", subs->prefix_asc, subs->prefix_length);
 		return 200;
 	}
 
