@@ -92,8 +92,8 @@ struct sixxsd_tunnel *tunnel_grab(const uint16_t tid)
  * Tunnel Address Space Layout
  * bits		length	total	description	note
  *+------------+-------+-------+---------------+-----------------------
- *  0 - 47	48	-	prefix		ISP-provided
- * 48 - 63	16	65k	tunnel_id	14 bits due to IPv4 thus max 16k
+ *  0 - aa	aa	-	prefix		ISP-provided
+ * aa - 127	16	65k	tunnel_id	14 bits due to IPv4 thus max 16k
  * 64 - 127	64	-	eui-64		::1 == PoP, ::2 == User
  */
 uint16_t tunnel_get6(IPADDRESS *addr, BOOL *is_tunnel)
@@ -103,14 +103,14 @@ uint16_t tunnel_get6(IPADDRESS *addr, BOOL *is_tunnel)
 
 	*is_tunnel = false;
 
-	/* Only look at the first 48 bits to match the prefix */
-	if (memcmp(&t->prefix, addr, (48/8)) != 0)
+	/* compare the length of prefix  */
+	if (memcmp(&t->prefix, addr, (t->prefix_length/8)) != 0)
 	{
 		return SIXXSD_TUNNEL_NONE;
 	}
 
 	/* Bits 48-63 describe the tunnel id */
-	tid = ntohs(addr->a16[(48/16)]);
+	tid = ntohs(addr->a16[(t->prefix_length/16)]);
 	if (tid <= t->tunnel_hi)
 	{
 		*is_tunnel = true;

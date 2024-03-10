@@ -1654,16 +1654,21 @@ VOID iface_upnets(VOID)
 	if (!ipaddress_is_unspecified(&tuns->prefix) && !tuns->online)
 	{
 #ifdef _LINUX
+		/* Remove last char from prefix */
+		char prefix_asc_no_colon[NI_MAXHOST];
+		strcpy(prefix_asc_no_colon, tuns->prefix_asc);
+		prefix_asc_no_colon[strlen(prefix_asc_no_colon) - 1] = '\0';
+
 		/* Add the 'sixxsd' route as a direct route */
 		os_exec("/sbin/ip -6 ro add %sffff::1/128 dev sixxs",
-				tuns->prefix_asc);
+				prefix_asc_no_colon);
 
 		/*
 		 * Point the tunnel prefix to the 'sixxsd' address (above)
 		 * this avoids a /48 of neighbour caching in the Linux kernel
 		 */
-		os_exec("/sbin/ip -6 ro add %s/" PRIu8 " via %sffff::1 dev sixxs",
-				tuns->prefix_asc, tuns->prefix_length, tuns->prefix_asc);
+		os_exec("/sbin/ip -6 ro add %s/%d via %sffff::1 dev sixxs",
+				tuns->prefix_asc, tuns->prefix_length, prefix_asc_no_colon);
 #else /* FreeBSD/OSX */
 		os_exec("/sbin/route add -inet6 %s/" PRIu8 " -interface sixxs", tuns->prefix_asc, tuns->prefix_length);
 #endif
@@ -1672,6 +1677,11 @@ VOID iface_upnets(VOID)
 
 	for (i = 0; i <= g_conf->subnets_hi; i++)
 	{
+		/* Remove last char from prefix */
+		char prefix_asc_no_colon[NI_MAXHOST];
+		strcpy(prefix_asc_no_colon, tuns->prefix_asc);
+		prefix_asc_no_colon[strlen(prefix_asc_no_colon) - 1] = '\0';
+
 		subs = &g_conf->subnets[i];
 		if (subs->online)
 		{
@@ -1680,16 +1690,20 @@ VOID iface_upnets(VOID)
 		}
 
 #ifdef _LINUX
-		os_exec("/sbin/ip -6 ro add %s%s::/%u via %sffff::1 dev sixxs",
+		os_exec("/sbin/ip -6 ro add %s%s/%u via %sffff::1 dev sixxs",
 #else /* FreeBSD/OSX */
-		os_exec("/sbin/route add -inet6 %s%s::/%u -interface sixxs",
+		os_exec("/sbin/route add -inet6 %s%s/%u -interface sixxs",
 #endif
+				// subs->prefix_asc,
+				// subs->prefix_length == 40 ? "00" : "",
+				// subs->prefix_length
 				subs->prefix_asc,
-				subs->prefix_length == 40 ? "00" : "",
+				"",
 				subs->prefix_length
+
 #ifdef _LINUX
 				,
-				tuns->prefix_asc
+				prefix_asc_no_colon
 #endif
 		);
 

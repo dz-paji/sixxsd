@@ -486,7 +486,7 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 			sub = &subs->subnet[j];
 			if (sub->tunnel_id == SIXXSD_TUNNEL_NONE) continue;
 
-			fprintf(f, "\t\tconfig %s%02x/%u %x static\n",
+			fprintf(f, "\t\tconfig %s/%u %x static\n",
 				subs->prefix_asc,
 				j,
 				subs->prefix_length, sub->tunnel_id);
