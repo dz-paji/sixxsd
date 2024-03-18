@@ -109,13 +109,21 @@ uint16_t tunnel_get6(IPADDRESS *addr, BOOL *is_tunnel)
 		return SIXXSD_TUNNEL_NONE;
 	}
 
-	/* Bits 48-63 describe the tunnel id */
-	tid = ntohs(addr->a16[(t->prefix_length/16)]);
+	/* Last quad describes the tunnel id */
+	tid = ntohs(addr->a16[7]);
+	tid--;
+	// tid should be smaller than highest tunnel id and is odd
 	if (tid <= t->tunnel_hi)
 	{
 		*is_tunnel = true;
+
+		char ip_asci[NI_MAXHOST];
+		inet_ntopA(addr, ip_asci, sizeof(ip_asci));
+		mdolog(LOG_DEBUG, "it's a tunnel. tunnel id is %u, ip is: %s\n", tid, ip_asci);
 		return tid;
 	}
+
+	mdolog(LOG_DEBUG, "tunnel id assert false \n");
 
 	/* If the high-bit is set it it is a /64 subnet from the tunnel range */
 	if (tid & 0x8000)
@@ -123,11 +131,15 @@ uint16_t tunnel_get6(IPADDRESS *addr, BOOL *is_tunnel)
 		tid &= 0x7fff;
 		if (tid <= t->tunnel_hi)
 		{
+			mdolog(LOG_DEBUG, "highbit is set. got tid as %u\n", tid);
 			return tid;
 		}
 	}
 
 	/* Not configured */
+	char hst[64];
+	inet_ntopA(addr, hst, sizeof(hst));
+	mdolog(LOG_DEBUG, "Not configured for ip %s\n", hst);
 	return SIXXSD_TUNNEL_NONE;
 }
 
@@ -195,6 +207,7 @@ uint16_t tunnel_get6(IPADDRESS *addr, BOOL *is_tunnel)
  */
 uint16_t tunnel_get4(IPADDRESS *addr, BOOL *is_tunnel)
 {
+	mdolog(LOG_DEBUG, "We now do a tunnel get4\n");
 	struct sixxsd_tunnels	*t = &g_conf->tunnels;
 	uint32_t		a4, sel;
 	uint16_t		pop_id, tid;
@@ -245,6 +258,7 @@ uint16_t tunnel_get4(IPADDRESS *addr, BOOL *is_tunnel)
  */
 uint16_t tunnel_find(IPADDRESS *addr)
 {
+	mdolog(LOG_DEBUG, "We now do a tunnel find\n");
 	struct sixxsd_tunnels	*t = &g_conf->tunnels;
 	uint16_t		tid;
 
@@ -758,11 +772,24 @@ static int tunnel_show(struct sixxsd_context *ctx, uint16_t tid)
 		return 404;
 	}
 
+	// Get prefix of tunnel from tuns
+	IPADDRESS their_prefix;
+	char their_prefix_asc[INET6_ADDRSTRLEN];
+	memcpy(&their_prefix, &tuns->prefix, sizeof(their_prefix));
+	
+	//increment last oct of ipv6 by 1, thus its ::1 and ::2
+	for (int i = 0; i < 7; ++i) {
+    their_prefix.a16[i] = 0;
+	}
+	their_prefix.a16[7]++;
+	inet_ntopA(&their_prefix, their_prefix_asc, sizeof(their_prefix_asc));
+	
+
 	ctx_printf(ctx, "Tunnel ID               : T%u\n", tun->tunnel_id);
 	ctx_printf(ctx, "TID                     : 0x%x\n", tid);
 	ctx_printf(ctx, "Tunnel Debugging        : %s%s\n", yesno(tun->debug_ctx), tun->debug_ctx && !g_conf->debugging ? " [PoP-wide disabled]" : "");
-	ctx_printf(ctx, "Inner Us                : %s%x::1\n", tuns->prefix_asc, tid);
-	ctx_printf(ctx, "Inner Them              : %s%x::2\n", tuns->prefix_asc, tid);
+	ctx_printf(ctx, "Inner Us                : %s%x\n", tuns->prefix_asc, tid);
+	ctx_printf(ctx, "Inner Them              : %s%x\n", their_prefix_asc, tid);
 
 	inet_ntopA(&tun->ip_us, buf, sizeof(buf));
 	ctx_printf(ctx, "Outer Us                : %s\n", buf);
@@ -840,6 +867,8 @@ static int tunnel_gettid(struct sixxsd_context *ctx, const char *arg, uint16_t *
 	IPADDRESS	ip;
 	BOOL		is_tunnel;
 	uint16_t	tid;
+
+	mdolog(LOG_DEBUG, "We now do a tunnel gettid\n");
 
 	/* None found yet */
 	*tid_ = tid = SIXXSD_TUNNEL_NONE;

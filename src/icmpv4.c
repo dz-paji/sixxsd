@@ -38,6 +38,8 @@ VOID icmpv4_in(const IPADDRESS *org, uint8_t *packet, const uint32_t len)
 	IPADDRESS			src;
 	enum sixxsd_tunnel_errors	err;
 
+	mdolog(LOG_DEBUG, "icmpv4_in(%p, %p, %u)\n", org, packet, len);
+
 	switch (icmp->icmp_type)
 	{
 	case ICMP_ECHOREPLY:

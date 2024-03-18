@@ -16,23 +16,57 @@ struct pingtest
 	uint8_t message[1000];
 };
 
-#define ADDRESS_ISX(name, X)                 \
-	BOOL address_is_##name(IPADDRESS *addr); \
-	BOOL address_is_##name(IPADDRESS *addr)  \
-	{                                        \
-		return (addr->a32[2] == htonl(0) &&  \
-				addr->a32[3] == htonl(X))    \
-				   ? true                    \
-				   : false;                  \
+// #define ADDRESS_ISX(name, X)                 \
+// 	BOOL address_is_##name(IPADDRESS *addr); \
+// 	BOOL address_is_##name(IPADDRESS *addr)  \
+// 	{                                        \
+// 		return (addr->a32[2] == htonl(0) &&  \
+// 				addr->a32[3] == htonl(X))    \
+// 				   ? true                    \
+// 				   : false;                  \
+// 	}
+
+// ADDRESS_ISX(local, SIXXSD_TUNNEL_IP_US)
+// ADDRESS_ISX(remote, SIXXSD_TUNNEL_IP_THEM)
+
+address_is_local(IPADDRESS *addr, uint16_t X)
+{
+	mdolog(LOG_DEBUG, "address_is_local(%p, %u)\n", addr, X);
+	
+	/* show addr */
+	for (int i = 0; i < 8; i++)
+	{
+		mdolog(LOG_DEBUG, "addr->a16[%d] = %u\n", i, addr->a16[i]);
 	}
 
-ADDRESS_ISX(local, SIXXSD_TUNNEL_IP_US)
-ADDRESS_ISX(remote, SIXXSD_TUNNEL_IP_THEM)
+	return (addr->a32[2] == htonl(0) &&
+			addr->a32[3] == htonl(X))
+			   ? true
+			   : false;
+}
+
+address_is_remote(IPADDRESS *addr, uint16_t X)
+{
+	mdolog(LOG_DEBUG, "address_is_remote(%p, %u)\n", addr, X);
+	
+	/* show addr */
+	for (int i = 0; i < 8; i++)
+	{
+		mdolog(LOG_DEBUG, "addr->a16[%d] = %u\n", i, addr->a16[i]);
+	}
+
+	return (addr->a32[2] == htonl(0) &&
+			addr->a32[3] == htonl(X))
+			   ? true
+			   : false;
+}
 
 uint16_t address_find6(IPADDRESS *addr, BOOL *istunnel)
 {
 	struct sixxsd_subnet *s;
 	uint16_t tid;
+
+	mdolog(LOG_DEBUG, "address_find6(%p, %p)\n", addr, istunnel);
 
 	/* Force it not to be a tunnel (yet) */
 	*istunnel = false;
@@ -622,7 +656,7 @@ VOID iface_route6_local(const uint16_t in_tid, const uint16_t out_tid, uint8_t *
 		case ICMP6_ECHO_REPLY:
 			tunnel_debug(in_tid, out_tid, packet, len, "Local Address - echo reply\n");
 			/* We only care about these if they came from the remote tunnel endpoint on the tunnel */
-			if (in_tid == out_tid && address_is_remote((IPADDRESS *)&ip6->ip6_src))
+			if (in_tid == out_tid && address_is_remote((IPADDRESS *)&ip6->ip6_src, in_tid))
 			{
 				iface_got_icmpv6_reply(in_tid, packet, len, icmp, plen);
 			}
@@ -655,7 +689,12 @@ VOID iface_route6(const uint16_t in_tid, const uint16_t out_tid_, uint8_t *packe
 	uint16_t out_tid = out_tid_;
 	BOOL istunnel;
 
+	mdolog(LOG_DEBUG, "Got a v6 packet to forward. iface_route6(%u, %u, %p, %u, %u, %u, %u)\n", in_tid, out_tid, packet, len, is_response, decrease_ttl, nosrcchk);
+	mdolog(LOG_DEBUG, "is response & decrease ttl, or not response: %u\n", (is_response && decrease_ttl) || !is_response);
+
 	assert((is_response && !decrease_ttl) || !is_response);
+
+	mdolog(LOG_DEBUG, "assert true \n");
 
 	/* Make sure it is actually an IPv6 packet */
 	if (!IS_IPV6(ip6))
@@ -704,6 +743,7 @@ VOID iface_route6(const uint16_t in_tid, const uint16_t out_tid_, uint8_t *packe
 		if (src_tid != in_tid)
 		{
 			/* We drop these to the floor as we can never reply to the real source which lives on the wrong interface */
+			mdolog(LOG_DEBUG, "iface_route6(%s) - dropping packet from wrong source interface %u != %u\n", is_response ? "error" : "normal", src_tid, in_tid);
 
 			/* When a tunneled packet came in from uplink put the error in the tunnel */
 			if (in_tid == SIXXSD_TUNNEL_UPLINK)
@@ -718,11 +758,13 @@ VOID iface_route6(const uint16_t in_tid, const uint16_t out_tid_, uint8_t *packe
 		}
 
 		/* Address is a tunnel but neither <tunnel>::1 or <tunnel>::2 -> address should not be used */
-		if (istunnel && !address_is_local((IPADDRESS *)&ip6->ip6_src) && !address_is_remote((IPADDRESS *)&ip6->ip6_src))
-		{
-			iface_send_icmpv6_unreach(in_tid, out_tid, packet, len, ICMP6_DST_UNREACH_POLICY);
-			return;
-		}
+		/* New design every address in the subnet is used. */
+		// if (istunnel && !address_is_local((IPADDRESS *)&ip6->ip6_src) && !address_is_remote((IPADDRESS *)&ip6->ip6_src))
+		// {
+
+		// 	iface_send_icmpv6_unreach(in_tid, out_tid, packet, len, ICMP6_DST_UNREACH_POLICY);
+		// 	return;
+		// }
 	}
 
 	/* Ignore link-local destination addresses */
@@ -734,19 +776,25 @@ VOID iface_route6(const uint16_t in_tid, const uint16_t out_tid_, uint8_t *packe
 
 	out_tid = address_find6((IPADDRESS *)&ip6->ip6_dst, &istunnel);
 
+	if (istunnel) 
+	{
+		
+	}
+
 	/* Local destination? (thus <tunnel-prefix>:<tid>::1) */
-	if (istunnel && address_is_local((IPADDRESS *)&ip6->ip6_dst))
+	if (istunnel && address_is_local((IPADDRESS *)&ip6->ip6_dst, out_tid))
 	{
 		iface_route6_local(in_tid, out_tid, packet, len);
 		return;
 	}
 
 	/* <tunnel>::1 is handled above, <tunnel>::2 below, this is thus for the rest in that /64 */
-	if (istunnel && !address_is_remote((IPADDRESS *)&ip6->ip6_dst))
-	{
-		iface_send_icmpv6_unreach(in_tid, out_tid, packet, len, ICMP6_DST_UNREACH_NOROUTE);
-		return;
-	}
+	/* Don't need it anymore. As its now /127. */
+	// if (istunnel && !address_is_remote((IPADDRESS *)&ip6->ip6_dst))
+	// {
+	// 	iface_send_icmpv6_unreach(in_tid, out_tid, packet, len, ICMP6_DST_UNREACH_NOROUTE);
+	// 	return;
+	// }
 
 	/* Don't route out over the same interface as that would just cause a routing loop */
 	if (!is_response && !nosrcchk && out_tid == in_tid)
@@ -1245,6 +1293,7 @@ static PTR *iface_read_thread(PTR *__sock)
 	/* Do the loopyloop */
 	while (g_conf && g_conf->running)
 	{
+		mdolog(LOG_DEBUG, "Reading from socket %s\n", iface_socket_name(sock->type));
 		if (sock->socket == INVALID_SOCKET)
 			break;
 

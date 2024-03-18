@@ -85,11 +85,13 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 	s->ayh.ayh_epochtime = htonl(gettime());
 
 	/* Our side of the tunnel */
-	memcpy(&s->identity, &g_conf->tunnels.prefix, (48/8));
-	s->identity.a16[(48/16)] = htons(out_tid);
-	memzero(&s->identity.a8[64/8], (56/8));
-	s->identity.a8[(128/8)-1] = 1;
+	memcpy(&s->identity, &g_conf->tunnels.prefix, sizeof(s->identity));
+	// s->identity.a16[(48/16)] = htons(out_tid);
+	s->identity.a8[(128/8)-1] = out_tid;
 
+	char identity_ascii[NI_MAXHOST];
+	inet_ntopA(&s->identity, identity_ascii, sizeof(identity_ascii));
+	mdolog(LOG_DEBUG, "outgoing: AYIYA packet, our side of tunnel is %s\n", identity_ascii);
 	/* The payload */
 	memcpy(s->payload, packet, len);
 
@@ -204,6 +206,8 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 	BOOL			is_tunnel;
 	uint64_t		currtime;
 
+	ayiya_log(LOG_DEBUG, src, socktype, protocol, sport, dport, &s->identity, "new ayiya packet\n");
+
 	/*
 	 * - idlen must be 4 (2^4 = 16 bytes = 128 bits = IPv6 address)
 	 * - It must be an integer identity
@@ -252,6 +256,8 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 		tunnel_log(SIXXSD_TUNNEL_NONE, in_tid, NULL, 0, SIXXSD_TERR_TUN_DISABLED, src);
 		return;
 	}
+
+	mdolog(LOG_DEBUG, "Incoming AYIYA packet for tunnel %u\n", in_tid);
 
 	/* Not taking beats, then we have no password either */
 	if (!tun->takebeats)
@@ -327,6 +333,7 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 
 	if (s->ayh.ayh_opcode == ayiya_op_forward)
 	{
+		mdolog(LOG_DEBUG, "AYIYA FORWARD packet received\n");
 		plen = len - (sizeof(*s) - sizeof(s->payload));
 
 		if (s->ayh.ayh_nextheader == IPPROTO_IPV6)
@@ -355,6 +362,7 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 	else if (s->ayh.ayh_opcode == ayiya_op_noop)
 	{
 		/* Silence about this, most likely just used for beating */
+		mdolog(LOG_DEBUG, "AYIYA NOOP packet received. Most likely a heartbeat packet.\n");
 	}
 }
 

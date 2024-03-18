@@ -13,6 +13,7 @@ const char module_direct[] = "direct";
 VOID direct_out_ipv4(struct sixxsd_tunnel *tun, const uint16_t in_tid, const uint16_t out_tid, const uint8_t protocol, const uint8_t *packet, const uint16_t len, BOOL is_response)
 {
 	struct ip ip;
+	mdolog(LOG_DEBUG, "do a direct out ipv4\n");
 
 	/* IP version 4 */
 	IPV4_INIT(ip, sizeof(ip) + len, protocol);
@@ -32,6 +33,7 @@ VOID direct_out_ipv6(struct sixxsd_tunnel *tun, const uint16_t in_tid, const uin
 		uint8_t			payload[2048];
 	} PACKED			pkt;
 
+	mdolog(LOG_DEBUG, "do a direct out ipv6\n");
         /* IPv6 */
 	IPV6_INIT(pkt.ip, len, protocol);
 
@@ -53,6 +55,12 @@ VOID direct_in(const IPADDRESS *src, const IPADDRESS *dst, uint16_t packettype, 
 	BOOL			fail = false;
 	BOOL			istunnel;
 	uint16_t		in_tid;
+
+	char src_acii[NI_MAXHOST];
+	char dst_acii[NI_MAXHOST];
+	inet_ntopA(src, src_acii, sizeof(src_acii));
+	inet_ntopA(dst, dst_acii, sizeof(dst_acii));
+	mdolog(LOG_DEBUG, "direct_in(%s -> %s, %s, %d, %d)\n", src_acii, dst_acii, (packettype == IPPROTO_IPV6 ? "IPv6" : "IPv4"), len, protocol);
 
 	/*
 	 * Fetch it. This automatically does RPF as we use the source inner IP address for
