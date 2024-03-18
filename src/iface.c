@@ -31,13 +31,13 @@ struct pingtest
 
 address_is_local(IPADDRESS *addr, uint16_t X)
 {
-	mdolog(LOG_DEBUG, "address_is_local(%p, %u)\n", addr, X);
+	// mdolog(LOG_DEBUG, "address_is_local(%p, %u)\n", addr, X);
 	
 	/* show addr */
-	for (int i = 0; i < 8; i++)
-	{
-		mdolog(LOG_DEBUG, "addr->a16[%d] = %u\n", i, addr->a16[i]);
-	}
+	// for (int i = 0; i < 8; i++)
+	// {
+	// 	mdolog(LOG_DEBUG, "addr->a16[%d] = %u\n", i, addr->a16[i]);
+	// }
 
 	return (addr->a32[2] == htonl(0) &&
 			addr->a32[3] == htonl(X))
@@ -47,13 +47,13 @@ address_is_local(IPADDRESS *addr, uint16_t X)
 
 address_is_remote(IPADDRESS *addr, uint16_t X)
 {
-	mdolog(LOG_DEBUG, "address_is_remote(%p, %u)\n", addr, X);
+	// mdolog(LOG_DEBUG, "address_is_remote(%p, %u)\n", addr, X);
 	
 	/* show addr */
-	for (int i = 0; i < 8; i++)
-	{
-		mdolog(LOG_DEBUG, "addr->a16[%d] = %u\n", i, addr->a16[i]);
-	}
+	// for (int i = 0; i < 8; i++)
+	// {
+	// 	mdolog(LOG_DEBUG, "addr->a16[%d] = %u\n", i, addr->a16[i]);
+	// }
 
 	return (addr->a32[2] == htonl(0) &&
 			addr->a32[3] == htonl(X))
@@ -66,7 +66,7 @@ uint16_t address_find6(IPADDRESS *addr, BOOL *istunnel)
 	struct sixxsd_subnet *s;
 	uint16_t tid;
 
-	mdolog(LOG_DEBUG, "address_find6(%p, %p)\n", addr, istunnel);
+	// mdolog(LOG_DEBUG, "address_find6(%p, %p)\n", addr, istunnel);
 
 	/* Force it not to be a tunnel (yet) */
 	*istunnel = false;
@@ -689,12 +689,7 @@ VOID iface_route6(const uint16_t in_tid, const uint16_t out_tid_, uint8_t *packe
 	uint16_t out_tid = out_tid_;
 	BOOL istunnel;
 
-	mdolog(LOG_DEBUG, "Got a v6 packet to forward. iface_route6(%u, %u, %p, %u, %u, %u, %u)\n", in_tid, out_tid, packet, len, is_response, decrease_ttl, nosrcchk);
-	mdolog(LOG_DEBUG, "is response & decrease ttl, or not response: %u\n", (is_response && decrease_ttl) || !is_response);
-
 	assert((is_response && !decrease_ttl) || !is_response);
-
-	mdolog(LOG_DEBUG, "assert true \n");
 
 	/* Make sure it is actually an IPv6 packet */
 	if (!IS_IPV6(ip6))
@@ -1293,7 +1288,6 @@ static PTR *iface_read_thread(PTR *__sock)
 	/* Do the loopyloop */
 	while (g_conf && g_conf->running)
 	{
-		mdolog(LOG_DEBUG, "Reading from socket %s\n", iface_socket_name(sock->type));
 		if (sock->socket == INVALID_SOCKET)
 			break;
 

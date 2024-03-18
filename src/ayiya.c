@@ -91,7 +91,6 @@ VOID ayiya_out_pseudo(struct sixxsd_tunnel *tun, struct pseudo_ayh *s, const uin
 
 	char identity_ascii[NI_MAXHOST];
 	inet_ntopA(&s->identity, identity_ascii, sizeof(identity_ascii));
-	mdolog(LOG_DEBUG, "outgoing: AYIYA packet, our side of tunnel is %s\n", identity_ascii);
 	/* The payload */
 	memcpy(s->payload, packet, len);
 
@@ -206,7 +205,7 @@ VOID ayiya_in(const IPADDRESS *src, const IPADDRESS *dst, const uint8_t socktype
 	BOOL			is_tunnel;
 	uint64_t		currtime;
 
-	ayiya_log(LOG_DEBUG, src, socktype, protocol, sport, dport, &s->identity, "new ayiya packet\n");
+	// ayiya_log(LOG_DEBUG, src, socktype, protocol, sport, dport, &s->identity, "new ayiya packet\n");
 
 	/*
 	 * - idlen must be 4 (2^4 = 16 bytes = 128 bits = IPv6 address)
