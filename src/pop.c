@@ -488,7 +488,7 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 
 			fprintf(f, "\t\tconfig %s/%u %x static\n",
 				subs->prefix_asc,
-				j,
+				// j,
 				subs->prefix_length, sub->tunnel_id);
 		}
 	}
