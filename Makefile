@@ -20,10 +20,10 @@ SIXXSD_VERSION=4.0
 SIXXSD_RELEASE:=2015.10.12
 
 # Enable extra debugging operation + enables symbols (don't distribute with it enabled!)
-SIXXSD_OPTIONS+=-DDEBUG
-SIXXSD_OPTIONS+=-DSYMBOLS
+# SIXXSD_OPTIONS+=-DDEBUG
+# SIXXSD_OPTIONS+=-DSYMBOLS
 # Debug Stack (Stackdump functions)
-SIXXSD_OPTIONS+=-DDEBUG_STACK
+# SIXXSD_OPTIONS+=-DDEBUG_STACK
 
 # Enable profiling?
 #SIXXSD_OPTIONS+=-DPROFILE

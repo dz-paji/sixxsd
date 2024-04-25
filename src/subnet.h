@@ -11,7 +11,11 @@
 
 struct sixxsd_subnet
 {
-	uint16_t			tunnel_id;			/* Tunnel ID */
+	// uint16_t			tunnel_id;			/* Tunnel ID */
+	// Make tunnel id a list of unit16t
+	uint16_t			tunnel_id[256];			/* Tunnel ID */
+	uint8_t				tunnel_count;			/* Number of tunnels */
+	
 };
 
 struct sixxsd_subnets

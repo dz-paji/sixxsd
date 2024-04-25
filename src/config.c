@@ -23,7 +23,7 @@ int cfg_init(struct sixxsd_context *ctx, uint32_t verbose)
 	struct sixxsd_tunnels	*tuns;
 	struct sixxsd_tunnel	*tun;
 	struct sixxsd_subnets	*subs;
-	unsigned int		i, j;
+	unsigned int		i, j, k;
 
 	i = sizeof(struct sixxsd_configuration);
 	ctx_printf(ctx, "Allocating a configuration structure of %u bytes\n", i);
@@ -87,7 +87,12 @@ int cfg_init(struct sixxsd_context *ctx, uint32_t verbose)
 		subs = &g_conf->subnets[i];
 		for (j = 0; j < lengthof(subs->subnet); j++)
 		{
-			subs->subnet[j].tunnel_id = SIXXSD_TUNNEL_NONE;
+			// subs->subnet[j].tunnel_id = SIXXSD_TUNNEL_NONE;
+			subs->subnet[j].tunnel_count = 0;
+			for (k = 0; k < lengthof(subs->subnet[j].tunnel_id); k++)
+			{
+				subs->subnet[j].tunnel_id[k] = SIXXSD_TUNNEL_NONE;
+			}
 		}
 	}
 

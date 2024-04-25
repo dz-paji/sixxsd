@@ -91,7 +91,10 @@ static int subnet_cmd_set_config(struct sixxsd_context *ctx, const unsigned int 
 		return 400;
 	}
 
-	sub->tunnel_id = tid;
+	// sub->tunnel_id = tid;
+	sub->tunnel_id[sub->tunnel_count++] = tid;
+	sub->tunnel_count++;
+	ctx_printf(ctx, "Set Tunnel-ID %s for subnet %s\n", args[1], args[0]);
 
 	ctx_printf(ctx, "Accepted Route %s via %s\n", args[0], args[1]);
 	return 200;

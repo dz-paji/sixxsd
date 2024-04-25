@@ -177,6 +177,7 @@ static int pop_cmd_show_hostinfo(struct sixxsd_context *ctx, const unsigned int 
 	if (f)
 	{
 		unsigned int	j;
+		unsigned int	k;
 		char		buf[2048];
 
 		while (!feof(f))
@@ -477,6 +478,8 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 	fprintf(f, "subnet\n");
 	fprintf(f, "\tset\n");
 
+	unsigned int k;
+
 	for (i = 0; i <= g_conf->subnets_hi; i++)
 	{
 		subs = &g_conf->subnets[i];
@@ -484,12 +487,15 @@ static int pop_cmd_saveconfig(struct sixxsd_context *ctx, const unsigned int UNU
 		for (j = 0; j < lengthof(subs->subnet); j++)
 		{
 			sub = &subs->subnet[j];
-			if (sub->tunnel_id == SIXXSD_TUNNEL_NONE) continue;
+			for (k = 0; k < lengthof(sub->tunnel_id); k++)
+			{
+				if (sub->tunnel_id[k] == SIXXSD_TUNNEL_NONE) continue;
 
-			fprintf(f, "\t\tconfig %s/%u %x static\n",
-				subs->prefix_asc,
-				// j,
-				subs->prefix_length, sub->tunnel_id);
+				fprintf(f, "\t\tconfig %s/%u %x static\n",
+					subs->prefix_asc,
+					subs->prefix_length, sub->tunnel_id[k]);
+			}
+
 		}
 	}
 
